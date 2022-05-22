@@ -1,3 +1,3 @@
 # foot-keypoints-tracking
 
-<img src="./assets/foot_tracking.gif"/>
+<img src="./foot_tracking.gif"/>
