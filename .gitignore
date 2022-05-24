@@ -1,4 +1,5 @@
 aws/
 data/
 results/
-custom_keypoint/
+custom_keypoint/20_keypoints
+custom_keypoint/keypoint_rcnn_training_pytorch-main/keypoints_foot_20.pth
