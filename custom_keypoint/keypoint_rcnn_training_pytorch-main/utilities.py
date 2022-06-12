@@ -114,18 +114,20 @@ def visualize(image, bboxes, keypoints,keypoints_classes_ids2names, image_origin
     colors = plt.cm.viridis(np.linspace(0, 1, len(keypoints_classes_ids2names.keys())))
     keypoints_classes_ids_color = {value: color[1:] * 255 for value, color in zip(keypoints_classes_ids2names.keys(), colors)}
 
-    for bbox in bboxes:
+    for bi,bbox in enumerate(bboxes):
         start_point = (bbox[0], bbox[1])
         end_point = (bbox[2], bbox[3])
         image = cv2.rectangle(image.copy(), start_point, end_point, (0,255,0), 2)
-    
+        image = cv2.putText(image,"box "+ str(bi), (start_point[0]+20,start_point[1]+20), cv2.FONT_HERSHEY_SIMPLEX, fontsize, (255,255,255), 1, cv2.LINE_AA)
+
+
     for kps in keypoints:
         for idx, kp in enumerate(kps):
-            image = cv2.circle(image.copy(), tuple(kp), 5, keypoints_classes_ids_color[idx],3)
-            image = cv2.putText(image.copy(), " " + keypoints_classes_ids2names[idx], tuple(kp), cv2.FONT_HERSHEY_SIMPLEX, fontsize, (255,255,255), 1, cv2.LINE_AA)
+            image = cv2.circle(image, tuple(kp), 5, keypoints_classes_ids_color[idx],3)
+            image = cv2.putText(image, " " + keypoints_classes_ids2names[idx], tuple(kp), cv2.FONT_HERSHEY_SIMPLEX, fontsize, (255,255,255), 1, cv2.LINE_AA)
 
     if image_original is None and keypoints_original is None:
-        cv2.imshow('prediction',image)
+        return image
 
 
     else:
@@ -146,9 +148,8 @@ def visualize(image, bboxes, keypoints,keypoints_classes_ids2names, image_origin
         image = cv2.resize(image, (600,900))
         image_result = cv2.hconcat([image_original, image])
 
-        cv2.imshow('prediction',image_result)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        return image_result
+
 
 def get_model(num_keypoints, weights_path=None):
     

@@ -12,7 +12,6 @@ import time
 
 
 n_keypoints = 20
-
 keypoints_classes_ids2names = {k:str(k) for k in range(n_keypoints)}
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
