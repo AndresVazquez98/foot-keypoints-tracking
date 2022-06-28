@@ -44,7 +44,7 @@ class Results:
         self.df = pd.DataFrame(columns = column_names)
         self.output_path = output_path
         self.output_path_csv = os.path.join(output_path, "results.csv")
-    
+        self.output_path_csv_ma = os.path.join(output_path, "results_ma.csv")
         
     def add_item(self,image_path,image,bboxes_list,keypoints_list):
         h,w,_ = image.shape
@@ -78,33 +78,83 @@ class Results:
         pixel_val_cols_list = []
         for n_foot in range(self.n_foots):
             pixel_val_cols_list.append(self.df.filter(like='v_'+str(n_foot)).columns.to_list())
+
         colors = ["#%06X" % randint(0, 0xFFFFFF) for i in range(self.n_keypoints)]
-        
         markers = itertools.cycle(( '+', 'o','^','v','<','>','s','x','D','h','1','2','3','4')) 
         for pi, pixel_val_cols in enumerate(pixel_val_cols_list):
             values_list = []
+            plt_value = False
             for pj,pixel_val_col in enumerate(pixel_val_cols):
                 pixel_val = self.df[pixel_val_col]
                 if pixel_val.isna().all() == True:
-                    return
+                    continue
+                plt_value  = True
                 marker_selected = next(markers)
                 plt.figure(pi,figsize=(25,15))
                 values_list.append( Line2D(range(len(pixel_val)),pixel_val, marker= marker_selected, linestyle='None',
                           markersize=10, label=pixel_val_col, color=colors[pj]) )
                 plt.plot(range(len(pixel_val)),pixel_val,ls="-",linewidth=2.0,color=colors[pj])
                 plt.scatter(range(len(pixel_val)),pixel_val,marker = marker_selected,color=colors[pj])
-            plt.legend(handles=values_list)
 
-            #plt.legend(pixel_val_cols)
-            plt.savefig(os.path.join(self.output_path, "results_foot_{}.png".format(pi)),dpi=400)
-            plt.show()
+                plt.figure(pi+2,figsize=(25,15))
+                plt.plot(range(len(pixel_val)),pixel_val,ls="-",linewidth=2.0,color=colors[pj])
+               
+                           
+            if plt_value:
+                plt.figure(pi,figsize=(25,15))
+                plt.legend(handles=values_list)
+                plt.savefig(os.path.join(self.output_path, "results_foot_{}.png".format(pi)),dpi=400)
+                plt.figure(pi+2,figsize=(25,15))
+                plt.legend(handles=values_list)
+                plt.savefig(os.path.join(self.output_path, "results_foot_no_scatter{}.png".format(pi)),dpi=400)
+                plt.show()
+
+        ## apply moving average
+        df_ma = self.df.copy()
+        n_frames = df_ma.shape[0]
+        window_size = int(n_frames/10)
+        pixel_val_cols_list_total = pixel_val_cols_list[0] +pixel_val_cols_list[1]
+
+        df_ma_cols = df_ma[pixel_val_cols_list_total].rolling(window=window_size).mean()
+        df_ma.update(df_ma_cols)
+        df_ma.to_csv(self.output_path_csv_ma,index=False)
+
+        for pi, pixel_val_cols in enumerate(pixel_val_cols_list):
+            values_list = []
+            plt_value = False
+            for pj,pixel_val_col in enumerate(pixel_val_cols):
+                pixel_val = df_ma[pixel_val_col]
+                if pixel_val.isna().all() == True:
+                    continue
+                plt_value  = True
+                marker_selected = next(markers)
+                plt.figure(pi,figsize=(25,15))
+                values_list.append( Line2D(range(len(pixel_val)),pixel_val, marker= marker_selected, linestyle='None',
+                          markersize=10, label=pixel_val_col, color=colors[pj]) )
+                plt.plot(range(len(pixel_val)),pixel_val,ls="-",linewidth=2.0,color=colors[pj])
+                plt.scatter(range(len(pixel_val)),pixel_val,marker = marker_selected,color=colors[pj])
+            
+                plt.figure(pi+2,figsize=(25,15))
+                plt.plot(range(len(pixel_val)),pixel_val,ls="-",linewidth=2.0,color=colors[pj])
+               
+            if plt_value:
+                plt.figure(pi,figsize=(25,15))
+                plt.legend(handles=values_list)
+                plt.savefig(os.path.join(self.output_path, "results_foot_ma_{}.png".format(pi)),dpi=400)
+                plt.figure(pi+2,figsize=(25,15))
+                plt.legend(handles=values_list)
+                plt.savefig(os.path.join(self.output_path, "results_foot_ma_no_scatter{}.png".format(pi)),dpi=400)
+                plt.show()
+
+
+
 
 
 folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/data/img'
 folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/custom_keypoint/test/images'
 folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/data/img (3)'
 folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/data/img (4)'
-folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/data/Abraham/Dentro'
+folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/data/Roman/Dentro'
 
 mode_show = 'cv2'
 n_keypoints = 20
@@ -130,6 +180,7 @@ out = cv2.VideoWriter(video_path, fourcc, 20.0, (image_w,image_h))
 with torch.no_grad():
     for image_path in image_paths:
         image = read_image(image_path).to(device)
+
         start_time = time.time()
         output = model([image])
         print("--- inference %s seconds ---" % (time.time() - start_time))
