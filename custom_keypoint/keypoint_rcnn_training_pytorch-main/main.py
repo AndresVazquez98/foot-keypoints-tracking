@@ -103,8 +103,8 @@ class Results:
 folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/data/img'
 folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/custom_keypoint/test/images'
 folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/data/img (3)'
-#folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/data/img (4)'
-
+folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/data/img (4)'
+folder_path = 'D:/python_scripts/repo/foot-keypoints-tracking/data/Abraham/Dentro'
 
 mode_show = 'cv2'
 n_keypoints = 20
@@ -114,7 +114,7 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 model = get_model(num_keypoints = n_keypoints,weights_path='keypoints_foot_20.pth')
 model.to(device)
 model.eval()
-image_paths = glob.glob(folder_path+'/*')
+image_paths = glob.glob(folder_path+'/*.bmp') + glob.glob(folder_path+'/*.jpg') + glob.glob(folder_path+'/*.png')
 output_folder = os.path.join('./results',os.path.basename(folder_path))
 
 create_folder(output_folder)
